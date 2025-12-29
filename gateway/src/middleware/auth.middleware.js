@@ -4,7 +4,6 @@
  */
 
 const jwt = require('jsonwebtoken');
-const axios = require('axios');
 const config = require('../config');
 
 /**
@@ -12,93 +11,72 @@ const config = require('../config');
  * Validates JWT and attaches user info to request headers
  * for downstream microservices
  */
-const authMiddleware = async (req, res, next) => {
+const authMiddleware = (req, res, next) => {
   try {
+    // Get token from header - supports both formats
     const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        message: 'Access denied. No token provided.'
+    
+    if (!authHeader) {
+      return res.status(401).json({ 
+        error: 'No authorization token provided' 
       });
     }
 
-    const token = authHeader.split(' ')[1];
+    // Support both "Bearer TOKEN" and "TOKEN" formats
+    const token = authHeader.startsWith('Bearer ') 
+      ? authHeader.substring(7) 
+      : authHeader;
 
-    // Verify token locally first (faster)
-    try {
-      const decoded = jwt.verify(token, config.jwt.secret);
-      
-      // Attach user info to headers for downstream services
-      req.headers['x-user-id'] = decoded.id;
-      req.headers['x-user-email'] = decoded.email;
-      req.headers['x-user-role'] = decoded.role;
-      req.headers['x-user-name'] = decoded.name || '';
-      
-      // Attach to request for local use
-      req.user = decoded;
-      
-      next();
-    } catch (jwtError) {
-      // Token verification failed
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid or expired token'
-      });
-    }
-  } catch (error) {
-    console.error('Auth middleware error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Authentication error'
-    });
-  }
-};
-
-/**
- * Optional authentication middleware
- * Attaches user info if token is valid, but doesn't require it
- */
-const optionalAuth = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return next();
-  }
-
-  const token = authHeader.split(' ')[1];
-
-  try {
+    // Verify token
     const decoded = jwt.verify(token, config.jwt.secret);
     
-    req.headers['x-user-id'] = decoded.id;
-    req.headers['x-user-email'] = decoded.email;
-    req.headers['x-user-role'] = decoded.role;
-    req.headers['x-user-name'] = decoded.name || '';
-    req.user = decoded;
+    // Attach user info to request
+    req.user = {
+      id: decoded.id || decoded.userId,
+      email: decoded.email,
+      role: decoded.role
+    };
+
+    next();
   } catch (error) {
-    // Token invalid - continue without user
+    console.error('Auth middleware error:', error.message);
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expired' });
+    }
+    
+    return res.status(401).json({ error: 'Authentication failed' });
+  }
+};
+
+const createContext = ({ req }) => {
+  const authHeader = req.headers.authorization || '';
+  
+  // Support both "Bearer TOKEN" and "TOKEN" formats
+  const token = authHeader.startsWith('Bearer ') 
+    ? authHeader.substring(7) 
+    : authHeader;
+
+  let user = null;
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      user = {
+        id: decoded.id || decoded.userId,
+        email: decoded.email,
+        role: decoded.role
+      };
+      console.log('✅ Valid token, user:', user.email);
+    } catch (error) {
+      console.log('❌ Invalid token in GraphQL context');
+    }
   }
 
-  next();
+  return { user };
 };
 
-/**
- * Admin role check middleware
- * Must be used after authMiddleware
- */
-const requireAdmin = (req, res, next) => {
-  if (!req.user || req.user.role !== 'ADMIN') {
-    return res.status(403).json({
-      success: false,
-      message: 'Admin access required'
-    });
-  }
-  next();
-};
-
-module.exports = {
-  authMiddleware,
-  optionalAuth,
-  requireAdmin
-};
+module.exports = { authMiddleware, createContext };

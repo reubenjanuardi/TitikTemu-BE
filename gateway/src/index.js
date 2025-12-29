@@ -10,7 +10,8 @@
  *   - GraphQL Gateway layer
  */
 
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -108,14 +109,30 @@ async function startServer() {
         const authHeader = req.headers.authorization;
         let user = null;
 
-        if (authHeader && authHeader.startsWith('Bearer ')) {
-          const token = authHeader.split(' ')[1];
-          try {
-            const jwt = require('jsonwebtoken');
-            user = jwt.verify(token, config.jwt.secret);
-          } catch (error) {
-            // Token invalid - user remains null
-            console.log('Invalid token in GraphQL context');
+        if (authHeader) {
+          // Support both "Bearer TOKEN" and "TOKEN" formats
+          const token = authHeader.startsWith('Bearer ') 
+            ? authHeader.substring(7) 
+            : authHeader;
+
+          if (token) {
+            try {
+              const jwt = require('jsonwebtoken');
+              const decoded = jwt.verify(token, config.jwt.secret);
+              
+              // Map JWT payload to user object
+              user = {
+                id: decoded.id || decoded.userId,
+                email: decoded.email,
+                role: decoded.role,
+                name: decoded.name
+              };
+              
+              console.log('✅ Valid token, user:', user.email, '- Role:', user.role);
+            } catch (error) {
+              // Token invalid - user remains null
+              console.log('❌ Invalid token in GraphQL context:', error.message);
+            }
           }
         }
 
