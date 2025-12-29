@@ -1,0 +1,12 @@
+{
+  "name": "@titiktemu/shared",
+  "version": "1.0.0",
+  "description": "Shared utilities for TitikTemu microservices",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"No tests yet\""
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  }
+}

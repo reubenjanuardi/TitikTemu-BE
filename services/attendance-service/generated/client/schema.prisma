@@ -1,0 +1,40 @@
+// ==============================================
+// Attendance Service - Prisma Schema
+// Schema: attendance_schema
+// Purpose: Event attendance tracking
+// ==============================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Attendance record model
+model AttendanceRecord {
+  id          String           @id @default(uuid())
+  eventId     String           @map("event_id")
+  userId      String           @map("user_id")
+  userName    String?          @map("user_name") // Cached for reporting
+  userEmail   String?          @map("user_email") // Cached for reporting
+  status      AttendanceStatus @default(CHECKED_IN)
+  checkInTime DateTime         @default(now()) @map("check_in_time")
+  notes       String?          @db.Text
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  // Unique constraint: user can only check in once per event
+  @@unique([eventId, userId])
+  @@map("attendance_records")
+}
+
+// Attendance status enum
+enum AttendanceStatus {
+  CHECKED_IN
+  LATE
+  EXCUSED
+}

@@ -1,0 +1,34 @@
+// ==============================================
+// Auth Service - Prisma Schema
+// Schema: auth_schema
+// Purpose: User authentication and authorization
+// ==============================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model - stores user credentials and profile
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // Hashed password using bcrypt
+  name      String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+// Role enum for role-based access control
+enum Role {
+  USER  // Regular student/participant
+  ADMIN // Event organizer/panitia
+}

@@ -1,0 +1,30 @@
+{
+  "name": "titiktemu-backend",
+  "version": "1.0.0",
+  "description": "TitikTemu - Microservices-based Event Management System for Kampus X",
+  "private": true,
+  "workspaces": [
+    "services/*",
+    "gateway",
+    "shared"
+  ],
+  "scripts": {
+    "dev:gateway": "npm run dev --workspace=gateway",
+    "dev:auth": "npm run dev --workspace=auth-service",
+    "dev:event": "npm run dev --workspace=event-service",
+    "dev:attendance": "npm run dev --workspace=attendance-service",
+    "dev:venue": "npm run dev --workspace=venue-consumer-service",
+    "dev:all": "concurrently \"npm run dev:auth\" \"npm run dev:event\" \"npm run dev:attendance\" \"npm run dev:venue\" \"npm run dev:gateway\"",
+    "db:generate": "npm run db:generate --workspaces --if-present",
+    "db:push": "npm run db:push --workspaces --if-present",
+    "db:migrate": "npm run db:migrate --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "Stevy Reuben Januardi",
+  "license": "MIT"
+}
