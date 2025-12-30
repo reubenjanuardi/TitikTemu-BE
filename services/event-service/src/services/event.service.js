@@ -5,12 +5,30 @@
 
 const prisma = require('../config/database');
 
+// Helper to get current time in WIB (UTC+07)
+const nowWIB = () => new Date(Date.now() + 7 * 60 * 60 * 1000);
+
 /**
  * Create a new event
  * @param {Object} eventData - Event data
  * @returns {Object} - Created event
  */
 const createEvent = async (eventData) => {
+  // Prevent duplicate logical events (same title & date)
+  const existing = await prisma.event.findFirst({
+    where: {
+      title: eventData.title,
+      date: new Date(eventData.date)
+    },
+    select: { id: true, title: true, date: true }
+  });
+
+  if (existing) {
+    const error = new Error('Event with the same title and date already exists');
+    error.statusCode = 409;
+    throw error;
+  }
+
   const event = await prisma.event.create({
     data: {
       title: eventData.title,
@@ -49,8 +67,9 @@ const getAllEvents = async ({ status, upcoming, page = 1, limit = 10 }) => {
   }
   
   if (upcoming) {
+    // Compare using WIB so "upcoming" respects UTC+07 current time
     where.date = {
-      gte: new Date()
+      gte: nowWIB()
     };
   }
 
@@ -141,6 +160,27 @@ const updateEvent = async (id, eventData) => {
   if (eventData.capacity) updateData.capacity = eventData.capacity;
   if (eventData.status) updateData.status = eventData.status;
 
+  // If title/date are changing, ensure no duplicate logical event exists
+  if (updateData.title || updateData.date) {
+    const candidateTitle = updateData.title || existing.title;
+    const candidateDate = updateData.date || existing.date;
+
+    const dup = await prisma.event.findFirst({
+      where: {
+        id: { not: id },
+        title: candidateTitle,
+        date: candidateDate
+      },
+      select: { id: true }
+    });
+
+    if (dup) {
+      const error = new Error('Event with the same title and date already exists');
+      error.statusCode = 409;
+      throw error;
+    }
+  }
+
   const event = await prisma.event.update({
     where: { id },
     data: updateData
@@ -218,26 +258,57 @@ const registerForEvent = async (eventId, { userId, userName, userEmail }) => {
     throw error;
   }
 
-  // Create registration
-  const registration = await prisma.eventParticipant.create({
-    data: {
-      eventId,
+  // Prevent registering to another event with the same title (duplicate logical event)
+  const duplicateTitleRegistration = await prisma.eventParticipant.findFirst({
+    where: {
       userId,
-      userName,
-      userEmail
+      event: {
+        title: event.title
+      }
     },
     include: {
       event: {
-        select: {
-          id: true,
-          title: true,
-          date: true
-        }
+        select: { id: true, title: true }
       }
     }
   });
 
-  return registration;
+  if (duplicateTitleRegistration) {
+    const error = new Error('Already registered to an event with this title');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  // Create registration (guard against race-condition duplicates)
+  try {
+    const registration = await prisma.eventParticipant.create({
+      data: {
+        eventId,
+        userId,
+        userName,
+        userEmail
+      },
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            date: true
+          }
+        }
+      }
+    });
+
+    return registration;
+  } catch (err) {
+    // Prisma unique constraint violation (duplicate registration)
+    if (err.code === 'P2002') {
+      const error = new Error('Already registered for this event');
+      error.statusCode = 409;
+      throw error;
+    }
+    throw err;
+  }
 };
 
 /**

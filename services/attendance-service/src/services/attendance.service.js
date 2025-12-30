@@ -4,6 +4,9 @@
  */
 
 const prisma = require('../config/database');
+
+// Helper to get current time in WIB (UTC+07)
+const nowWIB = () => new Date(Date.now() + 7 * 60 * 60 * 1000);
 const axios = require('axios');
 const config = require('../config');
 
@@ -48,7 +51,8 @@ const checkIn = async ({ eventId, userId, userName, userEmail, notes }) => {
       userEmail,
       notes,
       status: 'CHECKED_IN',
-      checkInTime: new Date()
+      // Save check-in time using WIB (UTC+07)
+      checkInTime: nowWIB()
     }
   });
 
