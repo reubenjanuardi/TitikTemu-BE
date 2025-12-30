@@ -225,16 +225,16 @@ Client → Gateway → Venue Consumer Service → LOGe (GraphQL)
 Each service has its own PostgreSQL schema:
 
 ```
-┌─────────────────────────────────────────────┐
-│           PostgreSQL Database               │
-│                                             │
+┌────────────────────────────────────────────┐
+│           PostgreSQL Database              │
+│                                            │
 │  ┌─────────────┐  ┌─────────────────────┐  │
 │  │ auth_schema │  │    event_schema     │  │
 │  │  ┌───────┐  │  │  ┌───────┐ ┌─────┐  │  │
 │  │  │ users │  │  │  │events │ │parts│  │  │
 │  │  └───────┘  │  │  └───────┘ └─────┘  │  │
 │  └─────────────┘  └─────────────────────┘  │
-│                                             │
+│                                            │
 │  ┌─────────────────────┐                   │
 │  │  attendance_schema  │                   │
 │  │   ┌──────────────┐  │                   │
@@ -242,7 +242,7 @@ Each service has its own PostgreSQL schema:
 │  │   │   _records   │  │                   │
 │  │   └──────────────┘  │                   │
 │  └─────────────────────┘                   │
-└─────────────────────────────────────────────┘
+└────────────────────────────────────────────┘
 ```
 
 ### Key Principles
