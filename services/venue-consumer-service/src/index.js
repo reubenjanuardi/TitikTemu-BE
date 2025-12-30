@@ -17,6 +17,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const venueRoutes = require('./routes/venue.routes');
+const publicRoutes = require('./routes/public.routes');
 const { errorHandler } = require('./middleware/error.middleware');
 
 const app = express();
@@ -47,6 +48,9 @@ app.get('/health', (req, res) => {
 // ==============================================
 app.use('/venues', venueRoutes);
 
+// Public API for LOGe to consume TitikTemu data
+app.use('/api/public', publicRoutes);
+
 // ==============================================
 // 404 Handler
 // ==============================================
@@ -70,6 +74,7 @@ app.listen(PORT, () => {
   console.log(`🏢 Venue Consumer Service running on port ${PORT}`);
   console.log(`   Health check: http://localhost:${PORT}/health`);
   console.log(`   LOGe GraphQL: ${process.env.LOGE_GRAPHQL_URL || 'not configured'}`);
+  console.log(`   📤 Public API for LOGe: http://localhost:${PORT}/api/public`);
 });
 
 module.exports = app;
