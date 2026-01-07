@@ -3,9 +3,9 @@
  * Handles all GraphQL communication with the external LOGe venue system
  */
 
-const { ApolloClient, InMemoryCache, gql, HttpLink } = require('@apollo/client/core');
-const fetch = require('cross-fetch');
-const config = require('./index');
+const { ApolloClient, InMemoryCache, gql, HttpLink } = require("@apollo/client/core");
+const fetch = require("cross-fetch");
+const config = require("./index");
 
 // Create Apollo Client instance for LOGe GraphQL API
 const createLogeClient = () => {
@@ -13,17 +13,22 @@ const createLogeClient = () => {
     link: new HttpLink({
       uri: config.loge.graphqlUrl,
       fetch,
-      headers: config.loge.apiKey ? {
-        'Authorization': `Bearer ${config.loge.apiKey}`
-      } : {}
+      headers: config.loge.apiKey
+        ? {
+            Authorization: `Bearer ${config.loge.apiKey}`,
+          }
+        : {},
     }),
     cache: new InMemoryCache(),
     defaultOptions: {
       query: {
-        fetchPolicy: 'no-cache',
-        errorPolicy: 'all'
-      }
-    }
+        fetchPolicy: "no-cache",
+        errorPolicy: "all",
+      },
+      mutate: {
+        errorPolicy: "all",
+      },
+    },
   });
 };
 
@@ -40,10 +45,14 @@ const GET_VENUES = gql`
       id
       name
       description
-      capacity
-      location
-      facilities
-      available
+      address
+      imageUrl
+      rooms {
+        id
+        name
+        capacity
+        facilities
+      }
     }
   }
 `;
@@ -57,21 +66,64 @@ const GET_VENUE_BY_ID = gql`
       id
       name
       description
-      capacity
-      location
-      facilities
-      available
+      address
+      imageUrl
+      rooms {
+        id
+        name
+        capacity
+        facilities
+      }
     }
   }
 `;
 
 /**
- * Query to check venue availability for a specific date
+ * Query to fetch rooms by venue
  */
-const CHECK_VENUE_AVAILABILITY = gql`
-  query CheckVenueAvailability($venueId: ID!, $date: String!) {
-    venueAvailability(venueId: $venueId, date: $date) {
+const GET_ROOMS_BY_VENUE = gql`
+  query GetRoomsByVenue($venueId: ID!) {
+    rooms(venueId: $venueId) {
+      id
       venueId
+      name
+      capacity
+      facilities
+      venue {
+        id
+        name
+      }
+    }
+  }
+`;
+
+/**
+ * Query to check room availability
+ */
+const CHECK_ROOM_AVAILABILITY = gql`
+  query CheckRoomAvailability($roomId: ID!, $startTime: String!, $endTime: String!) {
+    checkRoomAvailability(roomId: $roomId, startTime: $startTime, endTime: $endTime) {
+      available
+      message
+      conflictingReservations {
+        id
+        roomId
+        startTime
+        endTime
+        status
+      }
+    }
+  }
+`;
+
+/**
+ * Query to get room availability by date with time slots
+ */
+const GET_ROOM_AVAILABILITY_BY_DATE = gql`
+  query GetRoomAvailabilityByDate($roomId: ID!, $date: String!) {
+    roomAvailabilityByDate(roomId: $roomId, date: $date) {
+      roomId
+      roomName
       date
       available
       timeSlots {
@@ -84,32 +136,87 @@ const CHECK_VENUE_AVAILABILITY = gql`
 `;
 
 /**
- * Query to fetch logistics options
+ * Query to get reservations by room
  */
-const GET_LOGISTICS = gql`
-  query GetLogistics {
-    logistics {
+const GET_RESERVATIONS_BY_ROOM = gql`
+  query GetReservationsByRoom($roomId: ID!, $startDate: String, $endDate: String) {
+    reservationsByRoom(roomId: $roomId, startDate: $startDate, endDate: $endDate) {
       id
-      name
-      description
-      category
-      quantity
-      available
+      roomId
+      userId
+      startTime
+      endTime
+      status
+      room {
+        id
+        name
+        capacity
+      }
+    }
+  }
+`;
+
+// ==============================================
+// GraphQL Mutations for LOGe System
+// ==============================================
+
+/**
+ * Mutation to create a venue reservation/booking
+ */
+const CREATE_RESERVATION = gql`
+  mutation CreateReservation($roomId: ID!, $userId: Int!, $startTime: String!, $endTime: String!, $status: String) {
+    createReservation(roomId: $roomId, userId: $userId, startTime: $startTime, endTime: $endTime, status: $status) {
+      id
+      roomId
+      userId
+      startTime
+      endTime
+      status
+      room {
+        id
+        name
+        capacity
+        venue {
+          id
+          name
+        }
+      }
     }
   }
 `;
 
 /**
- * Query to fetch logistics by category
+ * Mutation to cancel a reservation
  */
-const GET_LOGISTICS_BY_CATEGORY = gql`
-  query GetLogisticsByCategory($category: String!) {
-    logisticsByCategory(category: $category) {
+const CANCEL_RESERVATION = gql`
+  mutation CancelReservation($id: ID!) {
+    cancelReservation(id: $id) {
       id
-      name
-      description
-      quantity
-      available
+      roomId
+      userId
+      startTime
+      endTime
+      status
+    }
+  }
+`;
+
+/**
+ * Mutation to update a reservation
+ */
+const UPDATE_RESERVATION = gql`
+  mutation UpdateReservation($id: ID!, $startTime: String, $endTime: String, $status: String) {
+    updateReservation(id: $id, startTime: $startTime, endTime: $endTime, status: $status) {
+      id
+      roomId
+      userId
+      startTime
+      endTime
+      status
+      room {
+        id
+        name
+      }
     }
   }
 `;
@@ -119,8 +226,14 @@ module.exports = {
   queries: {
     GET_VENUES,
     GET_VENUE_BY_ID,
-    CHECK_VENUE_AVAILABILITY,
-    GET_LOGISTICS,
-    GET_LOGISTICS_BY_CATEGORY
-  }
+    GET_ROOMS_BY_VENUE,
+    CHECK_ROOM_AVAILABILITY,
+    GET_ROOM_AVAILABILITY_BY_DATE,
+    GET_RESERVATIONS_BY_ROOM,
+  },
+  mutations: {
+    CREATE_RESERVATION,
+    CANCEL_RESERVATION,
+    UPDATE_RESERVATION,
+  },
 };
