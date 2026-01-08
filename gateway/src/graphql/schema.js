@@ -62,6 +62,9 @@ const typeDefs = gql`
     location: String
     venueId: String
     venueName: String
+    roomId: String
+    roomName: String
+    venueBookingId: String
     capacity: Int!
     status: EventStatus!
     participantCount: Int
@@ -238,6 +241,9 @@ const typeDefs = gql`
     location: String
     venueId: String
     venueName: String
+    roomId: String
+    roomName: String
+    venueBookingId: String
     capacity: Int
     status: EventStatus
   }
@@ -254,6 +260,9 @@ const typeDefs = gql`
     location: String
     venueId: String
     venueName: String
+    roomId: String
+    roomName: String
+    venueBookingId: String
     capacity: Int
     status: EventStatus
   }

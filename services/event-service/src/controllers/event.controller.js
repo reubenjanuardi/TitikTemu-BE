@@ -3,8 +3,8 @@
  * Handles event-related HTTP requests
  */
 
-const eventService = require('../services/event.service');
-const { validationResult } = require('express-validator');
+const eventService = require("../services/event.service");
+const { validationResult } = require("express-validator");
 
 /**
  * Create a new event
@@ -16,22 +16,25 @@ const createEvent = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: 'Validation failed',
-        errors: errors.array()
+        message: "Validation failed",
+        errors: errors.array(),
       });
     }
 
     const eventData = {
       ...req.body,
-      createdBy: req.user.id
+      createdBy: req.user.id,
+      userEmail: req.user.email,
+      userRole: req.user.role,
+      userName: req.user.name,
     };
 
     const event = await eventService.createEvent(eventData);
 
     return res.status(201).json({
       success: true,
-      message: 'Event created successfully',
-      data: event
+      message: "Event created successfully",
+      data: event,
     });
   } catch (error) {
     next(error);
@@ -45,18 +48,18 @@ const createEvent = async (req, res, next) => {
 const getAllEvents = async (req, res, next) => {
   try {
     const { status, upcoming, page, limit } = req.query;
-    
+
     const events = await eventService.getAllEvents({
       status,
-      upcoming: upcoming === 'true',
+      upcoming: upcoming === "true",
       page: parseInt(page) || 1,
-      limit: parseInt(limit) || 10
+      limit: parseInt(limit) || 10,
     });
 
     return res.status(200).json({
       success: true,
-      message: 'Events retrieved successfully',
-      data: events
+      message: "Events retrieved successfully",
+      data: events,
     });
   } catch (error) {
     next(error);
@@ -75,14 +78,14 @@ const getEventById = async (req, res, next) => {
     if (!event) {
       return res.status(404).json({
         success: false,
-        message: 'Event not found'
+        message: "Event not found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Event retrieved successfully',
-      data: event
+      message: "Event retrieved successfully",
+      data: event,
     });
   } catch (error) {
     next(error);
@@ -99,8 +102,8 @@ const updateEvent = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: 'Validation failed',
-        errors: errors.array()
+        message: "Validation failed",
+        errors: errors.array(),
       });
     }
 
@@ -109,8 +112,8 @@ const updateEvent = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Event updated successfully',
-      data: event
+      message: "Event updated successfully",
+      data: event,
     });
   } catch (error) {
     next(error);
@@ -128,7 +131,7 @@ const deleteEvent = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Event deleted successfully'
+      message: "Event deleted successfully",
     });
   } catch (error) {
     next(error);
@@ -149,13 +152,13 @@ const registerForEvent = async (req, res, next) => {
     const registration = await eventService.registerForEvent(id, {
       userId,
       userName,
-      userEmail
+      userEmail,
     });
 
     return res.status(201).json({
       success: true,
-      message: 'Successfully registered for event',
-      data: registration
+      message: "Successfully registered for event",
+      data: registration,
     });
   } catch (error) {
     next(error);
@@ -173,8 +176,8 @@ const getEventParticipants = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Participants retrieved successfully',
-      data: participants
+      message: "Participants retrieved successfully",
+      data: participants,
     });
   } catch (error) {
     next(error);
@@ -188,5 +191,5 @@ module.exports = {
   updateEvent,
   deleteEvent,
   registerForEvent,
-  getEventParticipants
+  getEventParticipants,
 };

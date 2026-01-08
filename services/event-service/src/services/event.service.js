@@ -3,7 +3,8 @@
  * Contains all event-related business logic
  */
 
-const prisma = require('../config/database');
+const prisma = require("../config/database");
+const venueHelper = require("../helpers/venue-booking.helper");
 
 // Helper to get current time in WIB (UTC+07)
 const nowWIB = () => new Date(Date.now() + 7 * 60 * 60 * 1000);
@@ -14,38 +15,117 @@ const nowWIB = () => new Date(Date.now() + 7 * 60 * 60 * 1000);
  * @returns {Object} - Created event
  */
 const createEvent = async (eventData) => {
-  // Prevent duplicate logical events (same title & date)
+  // 1. Validate input
+  if (!eventData.title || !eventData.date) {
+    throw new Error("Title and date are required");
+  }
+
+  // 2. If venue is selected, validate and book
+  let venueBooking = null;
+  if (eventData.venueId && eventData.roomId) {
+    // Build user object from eventData.createdBy
+    const user = {
+      id: eventData.createdBy,
+      email: eventData.userEmail || "admin@titiktemu.com",
+      role: eventData.userRole || "ADMIN",
+      name: eventData.userName || "Admin",
+    };
+    try {
+      // 2.1 Validate venue and room exist
+      const { venue, room } = await venueHelper.validateVenueAndRoom(eventData.venueId, eventData.roomId);
+      // 2.2 Build start/end datetime
+      const eventDate = new Date(eventData.date);
+      const [startHour, startMinute] = (eventData.startTime || "09:00").split(":");
+      const [endHour, endMinute] = (eventData.endTime || "12:00").split(":");
+      const startDateTime = new Date(eventDate);
+      startDateTime.setHours(parseInt(startHour), parseInt(startMinute), 0);
+      const endDateTime = new Date(eventDate);
+      endDateTime.setHours(parseInt(endHour), parseInt(endMinute), 0);
+      // 2.3 Check availability
+      await venueHelper.checkRoomAvailability(eventData.roomId, startDateTime.toISOString(), endDateTime.toISOString());
+      // 2.4 Create booking
+      venueBooking = await venueHelper.createVenueBooking(
+        {
+          roomId: eventData.roomId,
+          startTime: startDateTime.toISOString(),
+          endTime: endDateTime.toISOString(),
+          eventId: null, // Will be updated after event created
+        },
+        user
+      );
+      // 2.5 Update event data with venue info
+      eventData.venueName = venue.name;
+      eventData.roomName = room.name;
+      eventData.venueBookingId = venueBooking.id;
+      eventData.location = `${venue.name} - ${room.name}`;
+      // Use room capacity if event capacity not specified
+      if (!eventData.capacity) {
+        eventData.capacity = Math.min(room.capacity, 500);
+      }
+    } catch (error) {
+      // Venue validation or booking failed
+      throw new Error(error.message || "Failed to book venue");
+    }
+  }
+  // 3. Check for duplicate events (existing logic)
   const existing = await prisma.event.findFirst({
     where: {
       title: eventData.title,
-      date: new Date(eventData.date)
+      date: new Date(eventData.date),
     },
-    select: { id: true, title: true, date: true }
   });
-
   if (existing) {
-    const error = new Error('Event with the same title and date already exists');
+    // Rollback booking if event already exists
+    if (venueBooking) {
+      try {
+        await venueHelper.cancelVenueBooking(venueBooking.id, {
+          id: eventData.createdBy,
+          role: "ADMIN",
+        });
+      } catch (rollbackError) {
+        console.error("Failed to rollback booking:", rollbackError);
+      }
+    }
+    const error = new Error("Event with the same title and date already exists");
     error.statusCode = 409;
     throw error;
   }
-
-  const event = await prisma.event.create({
-    data: {
-      title: eventData.title,
-      description: eventData.description,
-      date: new Date(eventData.date),
-      startTime: eventData.startTime,
-      endTime: eventData.endTime,
-      location: eventData.location,
-      venueId: eventData.venueId,
-      venueName: eventData.venueName,
-      capacity: eventData.capacity || 100,
-      status: eventData.status || 'PUBLISHED',
-      createdBy: eventData.createdBy
+  // 4. Create event in database
+  try {
+    const event = await prisma.event.create({
+      data: {
+        title: eventData.title,
+        description: eventData.description,
+        date: new Date(eventData.date),
+        startTime: eventData.startTime,
+        endTime: eventData.endTime,
+        location: eventData.location,
+        venueId: eventData.venueId,
+        venueName: eventData.venueName,
+        roomId: eventData.roomId,
+        roomName: eventData.roomName,
+        venueBookingId: eventData.venueBookingId,
+        capacity: eventData.capacity || 100,
+        status: eventData.status || "PUBLISHED",
+        createdBy: eventData.createdBy,
+      },
+    });
+    return event;
+  } catch (error) {
+    // Event creation failed, rollback booking
+    if (venueBooking) {
+      try {
+        await venueHelper.cancelVenueBooking(venueBooking.id, {
+          id: eventData.createdBy,
+          role: "ADMIN",
+        });
+        console.log("Venue booking rolled back due to event creation failure");
+      } catch (rollbackError) {
+        console.error("Failed to rollback booking:", rollbackError);
+      }
     }
-  });
-
-  return event;
+    throw error;
+  }
 };
 
 /**
@@ -55,21 +135,21 @@ const createEvent = async (eventData) => {
  */
 const getAllEvents = async ({ status, upcoming, page = 1, limit = 10 }) => {
   const skip = (page - 1) * limit;
-  
+
   // Build where clause
   const where = {};
-  
+
   if (status) {
     where.status = status;
   } else {
     // By default, only show published events to public
-    where.status = 'PUBLISHED';
+    where.status = "PUBLISHED";
   }
-  
+
   if (upcoming) {
     // Compare using WIB so "upcoming" respects UTC+07 current time
     where.date = {
-      gte: nowWIB()
+      gte: nowWIB(),
     };
   }
 
@@ -77,23 +157,23 @@ const getAllEvents = async ({ status, upcoming, page = 1, limit = 10 }) => {
   const [events, total] = await Promise.all([
     prisma.event.findMany({
       where,
-      orderBy: { date: 'asc' },
+      orderBy: { date: "asc" },
       skip,
       take: limit,
       include: {
         _count: {
-          select: { participants: true }
-        }
-      }
+          select: { participants: true },
+        },
+      },
     }),
-    prisma.event.count({ where })
+    prisma.event.count({ where }),
   ]);
 
   // Transform to include participant count
-  const transformedEvents = events.map(event => ({
+  const transformedEvents = events.map((event) => ({
     ...event,
     participantCount: event._count.participants,
-    _count: undefined
+    _count: undefined,
   }));
 
   return {
@@ -102,8 +182,8 @@ const getAllEvents = async ({ status, upcoming, page = 1, limit = 10 }) => {
       page,
       limit,
       total,
-      totalPages: Math.ceil(total / limit)
-    }
+      totalPages: Math.ceil(total / limit),
+    },
   };
 };
 
@@ -117,9 +197,9 @@ const getEventById = async (id) => {
     where: { id },
     include: {
       _count: {
-        select: { participants: true }
-      }
-    }
+        select: { participants: true },
+      },
+    },
   });
 
   if (!event) return null;
@@ -127,7 +207,7 @@ const getEventById = async (id) => {
   return {
     ...event,
     participantCount: event._count.participants,
-    _count: undefined
+    _count: undefined,
   };
 };
 
@@ -140,15 +220,15 @@ const getEventById = async (id) => {
 const updateEvent = async (id, eventData) => {
   // Check if event exists
   const existing = await prisma.event.findUnique({ where: { id } });
-  
+
   if (!existing) {
-    const error = new Error('Event not found');
+    const error = new Error("Event not found");
     error.statusCode = 404;
     throw error;
   }
 
   const updateData = {};
-  
+
   if (eventData.title) updateData.title = eventData.title;
   if (eventData.description !== undefined) updateData.description = eventData.description;
   if (eventData.date) updateData.date = new Date(eventData.date);
@@ -169,13 +249,13 @@ const updateEvent = async (id, eventData) => {
       where: {
         id: { not: id },
         title: candidateTitle,
-        date: candidateDate
+        date: candidateDate,
       },
-      select: { id: true }
+      select: { id: true },
     });
 
     if (dup) {
-      const error = new Error('Event with the same title and date already exists');
+      const error = new Error("Event with the same title and date already exists");
       error.statusCode = 409;
       throw error;
     }
@@ -183,7 +263,7 @@ const updateEvent = async (id, eventData) => {
 
   const event = await prisma.event.update({
     where: { id },
-    data: updateData
+    data: updateData,
   });
 
   return event;
@@ -194,14 +274,29 @@ const updateEvent = async (id, eventData) => {
  * @param {string} id - Event ID
  */
 const deleteEvent = async (id) => {
-  const existing = await prisma.event.findUnique({ where: { id } });
-  
+  const existing = await prisma.event.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      venueBookingId: true,
+      createdBy: true,
+    },
+  });
   if (!existing) {
-    const error = new Error('Event not found');
+    const error = new Error("Event not found");
     error.statusCode = 404;
     throw error;
   }
-
+  // Cancel venue booking if exists
+  if (existing.venueBookingId) {
+    try {
+      await venueHelper.cancelVenueBooking(existing.venueBookingId, { id: existing.createdBy, role: "ADMIN" });
+      console.log("Venue booking cancelled for event:", id);
+    } catch (error) {
+      console.error("Failed to cancel venue booking:", error.message);
+      // Continue with event deletion even if booking cancellation fails
+    }
+  }
   await prisma.event.delete({ where: { id } });
 };
 
@@ -217,27 +312,27 @@ const registerForEvent = async (eventId, { userId, userName, userEmail }) => {
     where: { id: eventId },
     include: {
       _count: {
-        select: { participants: true }
-      }
-    }
+        select: { participants: true },
+      },
+    },
   });
 
   if (!event) {
-    const error = new Error('Event not found');
+    const error = new Error("Event not found");
     error.statusCode = 404;
     throw error;
   }
 
   // Check if event is published
-  if (event.status !== 'PUBLISHED') {
-    const error = new Error('Cannot register for this event');
+  if (event.status !== "PUBLISHED") {
+    const error = new Error("Cannot register for this event");
     error.statusCode = 400;
     throw error;
   }
 
   // Check capacity
   if (event._count.participants >= event.capacity) {
-    const error = new Error('Event is full');
+    const error = new Error("Event is full");
     error.statusCode = 400;
     throw error;
   }
@@ -247,13 +342,13 @@ const registerForEvent = async (eventId, { userId, userName, userEmail }) => {
     where: {
       eventId_userId: {
         eventId,
-        userId
-      }
-    }
+        userId,
+      },
+    },
   });
 
   if (existingRegistration) {
-    const error = new Error('Already registered for this event');
+    const error = new Error("Already registered for this event");
     error.statusCode = 409;
     throw error;
   }
@@ -263,18 +358,18 @@ const registerForEvent = async (eventId, { userId, userName, userEmail }) => {
     where: {
       userId,
       event: {
-        title: event.title
-      }
+        title: event.title,
+      },
     },
     include: {
       event: {
-        select: { id: true, title: true }
-      }
-    }
+        select: { id: true, title: true },
+      },
+    },
   });
 
   if (duplicateTitleRegistration) {
-    const error = new Error('Already registered to an event with this title');
+    const error = new Error("Already registered to an event with this title");
     error.statusCode = 409;
     throw error;
   }
@@ -286,24 +381,24 @@ const registerForEvent = async (eventId, { userId, userName, userEmail }) => {
         eventId,
         userId,
         userName,
-        userEmail
+        userEmail,
       },
       include: {
         event: {
           select: {
             id: true,
             title: true,
-            date: true
-          }
-        }
-      }
+            date: true,
+          },
+        },
+      },
     });
 
     return registration;
   } catch (err) {
     // Prisma unique constraint violation (duplicate registration)
-    if (err.code === 'P2002') {
-      const error = new Error('Already registered for this event');
+    if (err.code === "P2002") {
+      const error = new Error("Already registered for this event");
       error.statusCode = 409;
       throw error;
     }
@@ -318,23 +413,23 @@ const registerForEvent = async (eventId, { userId, userName, userEmail }) => {
  */
 const getEventParticipants = async (eventId) => {
   const event = await prisma.event.findUnique({ where: { id: eventId } });
-  
+
   if (!event) {
-    const error = new Error('Event not found');
+    const error = new Error("Event not found");
     error.statusCode = 404;
     throw error;
   }
 
   const participants = await prisma.eventParticipant.findMany({
     where: { eventId },
-    orderBy: { registeredAt: 'asc' }
+    orderBy: { registeredAt: "asc" },
   });
 
   return {
     eventId,
     eventTitle: event.title,
     participants,
-    total: participants.length
+    total: participants.length,
   };
 };
 
@@ -349,9 +444,9 @@ const isUserRegistered = async (eventId, userId) => {
     where: {
       eventId_userId: {
         eventId,
-        userId
-      }
-    }
+        userId,
+      },
+    },
   });
 
   return !!registration;
@@ -365,5 +460,5 @@ module.exports = {
   deleteEvent,
   registerForEvent,
   getEventParticipants,
-  isUserRegistered
+  isUserRegistered,
 };

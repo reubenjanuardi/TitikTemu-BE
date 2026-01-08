@@ -249,6 +249,54 @@ npx prisma studio
 
 ---
 
+## 🔗 LOGe Integration Setup
+
+### Configure API Keys
+
+The system uses API keys for secure communication with the external LOGe venue management system.
+
+**In `.env` file:**
+
+```env
+# LOGe API Key for TitikTemu to call LOGe (outgoing)
+LOGE_API_KEY=your-api-key-here
+
+# LOGe API Key for LOGe to call TitikTemu (incoming)
+LOGE_INCOMING_API_KEY=your-shared-secret-key
+```
+
+**Two API Keys:**
+
+1. **`LOGE_API_KEY`** - Used by TitikTemu services (venue-consumer-service) to call LOGe GraphQL API
+2. **`LOGE_INCOMING_API_KEY`** - Used by LOGe to authenticate when calling TitikTemu public API
+
+### LOGe Access to TitikTemu Data
+
+LOGe can fetch event data from TitikTemu using the Public API with just an API key (no JWT required):
+
+```bash
+# Get all events
+curl -H "X-LOGE-API-Key: your-shared-secret-key" \
+  http://localhost:3002/api/public/events
+
+# Get event by ID
+curl -H "X-LOGE-API-Key: your-shared-secret-key" \
+  http://localhost:3002/api/public/events/{event-id}
+
+# Get venue bookings
+curl -H "X-LOGE-API-Key: your-shared-secret-key" \
+  http://localhost:3002/api/public/venue-bookings?venueId=1
+```
+
+**Public API Endpoints:**
+- `GET /api/public/events` - List all events
+- `GET /api/public/events/:id` - Get event details
+- `GET /api/public/venue-bookings` - Get events with venue bookings
+
+**Security Note:** Make sure to use a strong, randomly generated API key and keep it secure. Share it only with authorized LOGe system administrators.
+
+---
+
 ## Troubleshooting
 
 ### "Cannot find module" errors

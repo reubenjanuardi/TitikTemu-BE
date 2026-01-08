@@ -60,8 +60,28 @@ const requireUser = (req, res, next) => {
   next();
 };
 
+/**
+ * Verify LOGe API Key for public endpoints
+ * Used for external LOGe system to access event data
+ */
+const verifyLogeApiKey = (req, res, next) => {
+  const config = require('../config');
+  const apiKey = req.headers['x-loge-api-key'];
+  
+  // Check if LOGe API key is configured and matches
+  if (config.loge.incomingApiKey && apiKey !== config.loge.incomingApiKey) {
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid API key'
+    });
+  }
+  
+  next();
+};
+
 module.exports = {
   extractUser,
   requireAdmin,
-  requireUser
+  requireUser,
+  verifyLogeApiKey
 };

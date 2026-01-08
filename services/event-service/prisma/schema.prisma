@@ -23,8 +23,11 @@ model Event {
   startTime   String?  @map("start_time")
   endTime     String?  @map("end_time")
   location    String?
-  venueId     String?  @map("venue_id")     // External venue reference (from LOGe)
-  venueName   String?  @map("venue_name")   // Cached venue name for display
+  venueId     String?  @map("venue_id")     // Venue ID from LOGe
+  venueName   String?  @map("venue_name")   // Cached venue name
+  roomId      String?  @map("room_id")      // NEW: Room ID from LOGe
+  roomName    String?  @map("room_name")    // NEW: Cached room name
+  venueBookingId String? @map("venue_booking_id") // NEW: Reservation ID from LOGe
   capacity    Int      @default(100)
   status      EventStatus @default(PUBLISHED)
   createdBy   String   @map("created_by")   // User ID of creator (admin)

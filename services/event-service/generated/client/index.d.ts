@@ -1008,6 +1008,9 @@ export namespace Prisma {
     location: string | null
     venueId: string | null
     venueName: string | null
+    roomId: string | null
+    roomName: string | null
+    venueBookingId: string | null
     capacity: number | null
     status: $Enums.EventStatus | null
     createdBy: string | null
@@ -1025,6 +1028,9 @@ export namespace Prisma {
     location: string | null
     venueId: string | null
     venueName: string | null
+    roomId: string | null
+    roomName: string | null
+    venueBookingId: string | null
     capacity: number | null
     status: $Enums.EventStatus | null
     createdBy: string | null
@@ -1042,6 +1048,9 @@ export namespace Prisma {
     location: number
     venueId: number
     venueName: number
+    roomId: number
+    roomName: number
+    venueBookingId: number
     capacity: number
     status: number
     createdBy: number
@@ -1069,6 +1078,9 @@ export namespace Prisma {
     location?: true
     venueId?: true
     venueName?: true
+    roomId?: true
+    roomName?: true
+    venueBookingId?: true
     capacity?: true
     status?: true
     createdBy?: true
@@ -1086,6 +1098,9 @@ export namespace Prisma {
     location?: true
     venueId?: true
     venueName?: true
+    roomId?: true
+    roomName?: true
+    venueBookingId?: true
     capacity?: true
     status?: true
     createdBy?: true
@@ -1103,6 +1118,9 @@ export namespace Prisma {
     location?: true
     venueId?: true
     venueName?: true
+    roomId?: true
+    roomName?: true
+    venueBookingId?: true
     capacity?: true
     status?: true
     createdBy?: true
@@ -1207,6 +1225,9 @@ export namespace Prisma {
     location: string | null
     venueId: string | null
     venueName: string | null
+    roomId: string | null
+    roomName: string | null
+    venueBookingId: string | null
     capacity: number
     status: $Enums.EventStatus
     createdBy: string
@@ -1243,6 +1264,9 @@ export namespace Prisma {
     location?: boolean
     venueId?: boolean
     venueName?: boolean
+    roomId?: boolean
+    roomName?: boolean
+    venueBookingId?: boolean
     capacity?: boolean
     status?: boolean
     createdBy?: boolean
@@ -1262,6 +1286,9 @@ export namespace Prisma {
     location?: boolean
     venueId?: boolean
     venueName?: boolean
+    roomId?: boolean
+    roomName?: boolean
+    venueBookingId?: boolean
     capacity?: boolean
     status?: boolean
     createdBy?: boolean
@@ -1279,6 +1306,9 @@ export namespace Prisma {
     location?: boolean
     venueId?: boolean
     venueName?: boolean
+    roomId?: boolean
+    roomName?: boolean
+    venueBookingId?: boolean
     capacity?: boolean
     status?: boolean
     createdBy?: boolean
@@ -1307,6 +1337,9 @@ export namespace Prisma {
       location: string | null
       venueId: string | null
       venueName: string | null
+      roomId: string | null
+      roomName: string | null
+      venueBookingId: string | null
       capacity: number
       status: $Enums.EventStatus
       createdBy: string
@@ -1715,6 +1748,9 @@ export namespace Prisma {
     readonly location: FieldRef<"Event", 'String'>
     readonly venueId: FieldRef<"Event", 'String'>
     readonly venueName: FieldRef<"Event", 'String'>
+    readonly roomId: FieldRef<"Event", 'String'>
+    readonly roomName: FieldRef<"Event", 'String'>
+    readonly venueBookingId: FieldRef<"Event", 'String'>
     readonly capacity: FieldRef<"Event", 'Int'>
     readonly status: FieldRef<"Event", 'EventStatus'>
     readonly createdBy: FieldRef<"Event", 'String'>
@@ -3037,6 +3073,9 @@ export namespace Prisma {
     location: 'location',
     venueId: 'venueId',
     venueName: 'venueName',
+    roomId: 'roomId',
+    roomName: 'roomName',
+    venueBookingId: 'venueBookingId',
     capacity: 'capacity',
     status: 'status',
     createdBy: 'createdBy',
@@ -3174,6 +3213,9 @@ export namespace Prisma {
     location?: StringNullableFilter<"Event"> | string | null
     venueId?: StringNullableFilter<"Event"> | string | null
     venueName?: StringNullableFilter<"Event"> | string | null
+    roomId?: StringNullableFilter<"Event"> | string | null
+    roomName?: StringNullableFilter<"Event"> | string | null
+    venueBookingId?: StringNullableFilter<"Event"> | string | null
     capacity?: IntFilter<"Event"> | number
     status?: EnumEventStatusFilter<"Event"> | $Enums.EventStatus
     createdBy?: StringFilter<"Event"> | string
@@ -3192,6 +3234,9 @@ export namespace Prisma {
     location?: SortOrderInput | SortOrder
     venueId?: SortOrderInput | SortOrder
     venueName?: SortOrderInput | SortOrder
+    roomId?: SortOrderInput | SortOrder
+    roomName?: SortOrderInput | SortOrder
+    venueBookingId?: SortOrderInput | SortOrder
     capacity?: SortOrder
     status?: SortOrder
     createdBy?: SortOrder
@@ -3213,6 +3258,9 @@ export namespace Prisma {
     location?: StringNullableFilter<"Event"> | string | null
     venueId?: StringNullableFilter<"Event"> | string | null
     venueName?: StringNullableFilter<"Event"> | string | null
+    roomId?: StringNullableFilter<"Event"> | string | null
+    roomName?: StringNullableFilter<"Event"> | string | null
+    venueBookingId?: StringNullableFilter<"Event"> | string | null
     capacity?: IntFilter<"Event"> | number
     status?: EnumEventStatusFilter<"Event"> | $Enums.EventStatus
     createdBy?: StringFilter<"Event"> | string
@@ -3231,6 +3279,9 @@ export namespace Prisma {
     location?: SortOrderInput | SortOrder
     venueId?: SortOrderInput | SortOrder
     venueName?: SortOrderInput | SortOrder
+    roomId?: SortOrderInput | SortOrder
+    roomName?: SortOrderInput | SortOrder
+    venueBookingId?: SortOrderInput | SortOrder
     capacity?: SortOrder
     status?: SortOrder
     createdBy?: SortOrder
@@ -3256,6 +3307,9 @@ export namespace Prisma {
     location?: StringNullableWithAggregatesFilter<"Event"> | string | null
     venueId?: StringNullableWithAggregatesFilter<"Event"> | string | null
     venueName?: StringNullableWithAggregatesFilter<"Event"> | string | null
+    roomId?: StringNullableWithAggregatesFilter<"Event"> | string | null
+    roomName?: StringNullableWithAggregatesFilter<"Event"> | string | null
+    venueBookingId?: StringNullableWithAggregatesFilter<"Event"> | string | null
     capacity?: IntWithAggregatesFilter<"Event"> | number
     status?: EnumEventStatusWithAggregatesFilter<"Event"> | $Enums.EventStatus
     createdBy?: StringWithAggregatesFilter<"Event"> | string
@@ -3334,6 +3388,9 @@ export namespace Prisma {
     location?: string | null
     venueId?: string | null
     venueName?: string | null
+    roomId?: string | null
+    roomName?: string | null
+    venueBookingId?: string | null
     capacity?: number
     status?: $Enums.EventStatus
     createdBy: string
@@ -3352,6 +3409,9 @@ export namespace Prisma {
     location?: string | null
     venueId?: string | null
     venueName?: string | null
+    roomId?: string | null
+    roomName?: string | null
+    venueBookingId?: string | null
     capacity?: number
     status?: $Enums.EventStatus
     createdBy: string
@@ -3370,6 +3430,9 @@ export namespace Prisma {
     location?: NullableStringFieldUpdateOperationsInput | string | null
     venueId?: NullableStringFieldUpdateOperationsInput | string | null
     venueName?: NullableStringFieldUpdateOperationsInput | string | null
+    roomId?: NullableStringFieldUpdateOperationsInput | string | null
+    roomName?: NullableStringFieldUpdateOperationsInput | string | null
+    venueBookingId?: NullableStringFieldUpdateOperationsInput | string | null
     capacity?: IntFieldUpdateOperationsInput | number
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     createdBy?: StringFieldUpdateOperationsInput | string
@@ -3388,6 +3451,9 @@ export namespace Prisma {
     location?: NullableStringFieldUpdateOperationsInput | string | null
     venueId?: NullableStringFieldUpdateOperationsInput | string | null
     venueName?: NullableStringFieldUpdateOperationsInput | string | null
+    roomId?: NullableStringFieldUpdateOperationsInput | string | null
+    roomName?: NullableStringFieldUpdateOperationsInput | string | null
+    venueBookingId?: NullableStringFieldUpdateOperationsInput | string | null
     capacity?: IntFieldUpdateOperationsInput | number
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     createdBy?: StringFieldUpdateOperationsInput | string
@@ -3406,6 +3472,9 @@ export namespace Prisma {
     location?: string | null
     venueId?: string | null
     venueName?: string | null
+    roomId?: string | null
+    roomName?: string | null
+    venueBookingId?: string | null
     capacity?: number
     status?: $Enums.EventStatus
     createdBy: string
@@ -3423,6 +3492,9 @@ export namespace Prisma {
     location?: NullableStringFieldUpdateOperationsInput | string | null
     venueId?: NullableStringFieldUpdateOperationsInput | string | null
     venueName?: NullableStringFieldUpdateOperationsInput | string | null
+    roomId?: NullableStringFieldUpdateOperationsInput | string | null
+    roomName?: NullableStringFieldUpdateOperationsInput | string | null
+    venueBookingId?: NullableStringFieldUpdateOperationsInput | string | null
     capacity?: IntFieldUpdateOperationsInput | number
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     createdBy?: StringFieldUpdateOperationsInput | string
@@ -3440,6 +3512,9 @@ export namespace Prisma {
     location?: NullableStringFieldUpdateOperationsInput | string | null
     venueId?: NullableStringFieldUpdateOperationsInput | string | null
     venueName?: NullableStringFieldUpdateOperationsInput | string | null
+    roomId?: NullableStringFieldUpdateOperationsInput | string | null
+    roomName?: NullableStringFieldUpdateOperationsInput | string | null
+    venueBookingId?: NullableStringFieldUpdateOperationsInput | string | null
     capacity?: IntFieldUpdateOperationsInput | number
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     createdBy?: StringFieldUpdateOperationsInput | string
@@ -3593,6 +3668,9 @@ export namespace Prisma {
     location?: SortOrder
     venueId?: SortOrder
     venueName?: SortOrder
+    roomId?: SortOrder
+    roomName?: SortOrder
+    venueBookingId?: SortOrder
     capacity?: SortOrder
     status?: SortOrder
     createdBy?: SortOrder
@@ -3614,6 +3692,9 @@ export namespace Prisma {
     location?: SortOrder
     venueId?: SortOrder
     venueName?: SortOrder
+    roomId?: SortOrder
+    roomName?: SortOrder
+    venueBookingId?: SortOrder
     capacity?: SortOrder
     status?: SortOrder
     createdBy?: SortOrder
@@ -3631,6 +3712,9 @@ export namespace Prisma {
     location?: SortOrder
     venueId?: SortOrder
     venueName?: SortOrder
+    roomId?: SortOrder
+    roomName?: SortOrder
+    venueBookingId?: SortOrder
     capacity?: SortOrder
     status?: SortOrder
     createdBy?: SortOrder
@@ -4052,6 +4136,9 @@ export namespace Prisma {
     location?: string | null
     venueId?: string | null
     venueName?: string | null
+    roomId?: string | null
+    roomName?: string | null
+    venueBookingId?: string | null
     capacity?: number
     status?: $Enums.EventStatus
     createdBy: string
@@ -4069,6 +4156,9 @@ export namespace Prisma {
     location?: string | null
     venueId?: string | null
     venueName?: string | null
+    roomId?: string | null
+    roomName?: string | null
+    venueBookingId?: string | null
     capacity?: number
     status?: $Enums.EventStatus
     createdBy: string
@@ -4102,6 +4192,9 @@ export namespace Prisma {
     location?: NullableStringFieldUpdateOperationsInput | string | null
     venueId?: NullableStringFieldUpdateOperationsInput | string | null
     venueName?: NullableStringFieldUpdateOperationsInput | string | null
+    roomId?: NullableStringFieldUpdateOperationsInput | string | null
+    roomName?: NullableStringFieldUpdateOperationsInput | string | null
+    venueBookingId?: NullableStringFieldUpdateOperationsInput | string | null
     capacity?: IntFieldUpdateOperationsInput | number
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     createdBy?: StringFieldUpdateOperationsInput | string
@@ -4119,6 +4212,9 @@ export namespace Prisma {
     location?: NullableStringFieldUpdateOperationsInput | string | null
     venueId?: NullableStringFieldUpdateOperationsInput | string | null
     venueName?: NullableStringFieldUpdateOperationsInput | string | null
+    roomId?: NullableStringFieldUpdateOperationsInput | string | null
+    roomName?: NullableStringFieldUpdateOperationsInput | string | null
+    venueBookingId?: NullableStringFieldUpdateOperationsInput | string | null
     capacity?: IntFieldUpdateOperationsInput | number
     status?: EnumEventStatusFieldUpdateOperationsInput | $Enums.EventStatus
     createdBy?: StringFieldUpdateOperationsInput | string

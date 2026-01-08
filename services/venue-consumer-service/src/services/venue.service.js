@@ -7,7 +7,7 @@
  * All data comes from the external LOGe system.
  */
 
-const { createLogeClient, queries } = require('../config/graphql-client');
+const { createLogeClient, queries, mutations } = require('../config/graphql-client');
 
 // Create the GraphQL client
 let logeClient = null;
@@ -76,6 +76,40 @@ const getVenueById = async (id) => {
       return mockVenues.find(v => v.id === id) || null;
     }
     
+    throw error;
+  }
+};
+
+/**
+ * Get rooms by venue ID
+ * @param {string} venueId - Venue ID
+ * @returns {Array} - List of rooms
+ */
+const getRoomsByVenue = async (venueId) => {
+  try {
+    const client = getClient();
+    const { data, errors } = await client.query({
+      query: queries.GET_ROOMS_BY_VENUE,
+      variables: { venueId }
+    });
+
+    if (errors && errors.length > 0) {
+      console.error('GraphQL errors:', errors);
+      throw new Error('Failed to fetch rooms from LOGe');
+    }
+
+    return data?.rooms || [];
+  } catch (error) {
+    console.error('Failed to fetch rooms from LOGe:', error.message);
+
+    // Return mock data if LOGe is not available (for development)
+    if (process.env.NODE_ENV === 'development') {
+      return [
+        { id: 'room-1', venueId, name: 'Mock Room A', capacity: 50, facilities: ['Projector', 'AC'] },
+        { id: 'room-2', venueId, name: 'Mock Room B', capacity: 30, facilities: ['AC'] },
+      ];
+    }
+
     throw error;
   }
 };
@@ -274,7 +308,146 @@ const getMockLogistics = () => [
 module.exports = {
   getAllVenues,
   getVenueById,
+  getRoomsByVenue,
   checkVenueAvailability,
   getLogistics,
-  getLogisticsByCategory
+  getLogisticsByCategory,
+  // Room availability/reservations
+  checkRoomAvailability: async (roomId, startTime, endTime) => {
+    try {
+      const client = getClient();
+      const { data, errors } = await client.query({
+        query: queries.CHECK_ROOM_AVAILABILITY,
+        variables: { roomId, startTime, endTime },
+      });
+
+      if (errors && errors.length > 0) {
+        throw new Error('Failed to check room availability');
+      }
+
+      return data?.checkRoomAvailability || { available: false, message: 'Unavailable' };
+    } catch (error) {
+      // In development, provide a permissive mock
+      if (process.env.NODE_ENV === 'development') {
+        return { available: true, message: 'Mocked availability', conflictingReservations: [] };
+      }
+      throw error;
+    }
+  },
+
+  getRoomAvailabilityByDate: async (roomId, date) => {
+    try {
+      const client = getClient();
+      const { data, errors } = await client.query({
+        query: queries.GET_ROOM_AVAILABILITY_BY_DATE,
+        variables: { roomId, date },
+      });
+
+      if (errors && errors.length > 0) {
+        throw new Error('Failed to get room availability');
+      }
+
+      return data?.roomAvailabilityByDate || null;
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        return {
+          roomId,
+          roomName: 'Mock Room',
+          date,
+          available: true,
+          timeSlots: [
+            { startTime: '08:00', endTime: '10:00', available: true },
+            { startTime: '10:00', endTime: '12:00', available: false },
+          ],
+        };
+      }
+      throw error;
+    }
+  },
+
+  getReservationsByRoom: async (roomId, startDate, endDate) => {
+    try {
+      const client = getClient();
+      const { data, errors } = await client.query({
+        query: queries.GET_RESERVATIONS_BY_ROOM,
+        variables: { roomId, startDate, endDate },
+      });
+
+      if (errors && errors.length > 0) {
+        throw new Error('Failed to get reservations');
+      }
+
+      return data?.reservationsByRoom || [];
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        return [];
+      }
+      throw error;
+    }
+  },
+
+  // Bookings
+  createBooking: async (bookingData) => {
+    try {
+      const client = getClient();
+      const { roomId, userId, startTime, endTime, status } = bookingData;
+      const { data, errors } = await client.mutate({
+        mutation: mutations.CREATE_RESERVATION,
+        variables: { roomId, userId: parseInt(userId), startTime, endTime, status: status || 'confirmed' },
+      });
+
+      if (errors && errors.length > 0) {
+        const message = errors[0]?.message || 'Failed to create reservation';
+        throw new Error(message);
+      }
+
+      const reservation = data?.createReservation;
+      if (!reservation) {
+        throw new Error('Failed to create reservation');
+      }
+      return reservation;
+    } catch (error) {
+      // Surface availability conflicts as-is for controller to map to 409
+      throw error;
+    }
+  },
+
+  cancelBooking: async (id) => {
+    try {
+      const client = getClient();
+      const { data, errors } = await client.mutate({
+        mutation: mutations.CANCEL_RESERVATION,
+        variables: { id },
+      });
+
+      if (errors && errors.length > 0) {
+        const message = errors[0]?.message || 'Failed to cancel reservation';
+        throw new Error(message);
+      }
+
+      return data?.cancelReservation || null;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  updateBooking: async (id, updates) => {
+    try {
+      const client = getClient();
+      const { startTime, endTime, status } = updates;
+      const { data, errors } = await client.mutate({
+        mutation: mutations.UPDATE_RESERVATION,
+        variables: { id, startTime, endTime, status },
+      });
+
+      if (errors && errors.length > 0) {
+        const message = errors[0]?.message || 'Failed to update reservation';
+        throw new Error(message);
+      }
+
+      return data?.updateReservation || null;
+    } catch (error) {
+      throw error;
+    }
+  },
 };

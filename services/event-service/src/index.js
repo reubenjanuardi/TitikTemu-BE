@@ -42,6 +42,12 @@ app.get('/health', (req, res) => {
 // ==============================================
 // Routes
 // ==============================================
+
+// Public API routes for LOGe integration
+const publicRoutes = require('./routes/public.routes');
+app.use('/api/public', publicRoutes);
+
+// Internal routes (requires JWT via Gateway)
 app.use('/events', eventRoutes);
 
 // ==============================================

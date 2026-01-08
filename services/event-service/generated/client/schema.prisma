@@ -16,20 +16,23 @@ datasource db {
 
 // Event model - stores event information
 model Event {
-  id          String      @id @default(uuid())
-  title       String
-  description String?     @db.Text
-  date        DateTime
-  startTime   String?     @map("start_time")
-  endTime     String?     @map("end_time")
-  location    String?
-  venueId     String?     @map("venue_id") // External venue reference (from LOGe)
-  venueName   String?     @map("venue_name") // Cached venue name for display
-  capacity    Int         @default(100)
-  status      EventStatus @default(PUBLISHED)
-  createdBy   String      @map("created_by") // User ID of creator (admin)
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
+  id             String      @id @default(uuid())
+  title          String
+  description    String?     @db.Text
+  date           DateTime
+  startTime      String?     @map("start_time")
+  endTime        String?     @map("end_time")
+  location       String?
+  venueId        String?     @map("venue_id") // External venue reference (from LOGe)
+  venueName      String?     @map("venue_name") // Cached venue name for display
+  roomId         String?     @map("room_id") // Room ID from LOGe
+  roomName       String?     @map("room_name") // Cached room name
+  venueBookingId String?     @map("venue_booking_id") // Reservation ID from LOGe
+  capacity       Int         @default(100)
+  status         EventStatus @default(PUBLISHED)
+  createdBy      String      @map("created_by") // User ID of creator (admin)
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
 
   // Relations
   participants EventParticipant[]
