@@ -1,18 +1,18 @@
 /**
  * Public API Routes for LOGe Integration
- * 
+ *
  * These endpoints allow the external LOGe system to fetch event data
  * Authentication: Requires X-LOGE-API-Key header
- * 
+ *
  * Endpoints:
  *   GET /api/public/events        - Get all events
  *   GET /api/public/events/:id    - Get event by ID
  */
 
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const eventController = require('../controllers/event.controller');
-const { verifyLogeApiKey } = require('../middleware/auth.middleware');
+const eventController = require("../controllers/event.controller");
+const { verifyLogeApiKey } = require("../middleware/auth.middleware");
 
 // ==============================================
 // Middleware: Verify LOGe API Key
@@ -30,10 +30,10 @@ router.use(verifyLogeApiKey);
  * @desc    Get all events (for LOGe system)
  * @access  Public (requires API key)
  */
-router.get('/events', async (req, res, next) => {
+router.get("/events", async (req, res, next) => {
   try {
-    console.log('📥 LOGe requesting events:', req.query);
-    
+    console.log("📥 LOGe requesting events:", req.query);
+
     // Use the existing controller with query params
     await eventController.getAllEvents(req, res, next);
   } catch (error) {
@@ -46,10 +46,10 @@ router.get('/events', async (req, res, next) => {
  * @desc    Get event by ID (for LOGe system)
  * @access  Public (requires API key)
  */
-router.get('/events/:id', async (req, res, next) => {
+router.get("/events/:id", async (req, res, next) => {
   try {
-    console.log('📥 LOGe requesting event:', req.params.id);
-    
+    console.log("📥 LOGe requesting event:", req.params.id);
+
     // Use the existing controller
     await eventController.getEventById(req, res, next);
   } catch (error) {
@@ -62,44 +62,44 @@ router.get('/events/:id', async (req, res, next) => {
  * @desc    Get all events with venue bookings (for LOGe system)
  * @access  Public (requires API key)
  */
-router.get('/venue-bookings', async (req, res, next) => {
+router.get("/venue-bookings", async (req, res, next) => {
   try {
     const { venueId, startDate, endDate, page = 1, limit = 50 } = req.query;
-    
-    console.log('📥 LOGe requesting venue bookings:', { venueId, startDate, endDate });
-    
-    const eventService = require('../services/event.service');
-    const prisma = require('../config/database');
-    
+
+    console.log("📥 LOGe requesting venue bookings:", { venueId, startDate, endDate });
+
+    const eventService = require("../services/event.service");
+    const prisma = require("../config/database");
+
     // Build filter
     const where = {
       venueId: { not: null },
-      venueBookingId: { not: null }
+      venueBookingId: { not: null },
     };
-    
+
     if (venueId) {
       where.venueId = venueId;
     }
-    
+
     if (startDate || endDate) {
       where.date = {};
       if (startDate) where.date.gte = new Date(startDate);
       if (endDate) where.date.lte = new Date(endDate);
     }
-    
+
     // Get events with venue bookings
     const [events, total] = await Promise.all([
       prisma.event.findMany({
         where,
-        orderBy: { date: 'asc' },
+        orderBy: { date: "asc" },
         skip: (page - 1) * limit,
-        take: parseInt(limit)
+        take: parseInt(limit),
       }),
-      prisma.event.count({ where })
+      prisma.event.count({ where }),
     ]);
-    
+
     // Format response
-    const bookings = events.map(event => ({
+    const bookings = events.map((event) => ({
       eventId: event.id,
       eventTitle: event.title,
       venueId: event.venueId,
@@ -112,15 +112,15 @@ router.get('/venue-bookings', async (req, res, next) => {
       endTime: event.endTime,
       participantCount: event.participantCount || 0,
       capacity: event.capacity,
-      status: event.status
+      status: event.status,
     }));
-    
+
     res.json({
       success: true,
       data: {
         bookings,
-        total
-      }
+        total,
+      },
     });
   } catch (error) {
     next(error);

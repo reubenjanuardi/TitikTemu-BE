@@ -116,12 +116,12 @@ npm run dev:gateway
 
 ## Service Ports
 
-| Service | Port | URL |
-|---------|------|-----|
-| API Gateway | 3000 | http://localhost:3000 |
-| Auth Service | 3001 | http://localhost:3001 |
-| Event Service | 3002 | http://localhost:3002 |
-| Attendance Service | 3003 | http://localhost:3003 |
+| Service                | Port | URL                   |
+| ---------------------- | ---- | --------------------- |
+| API Gateway            | 3000 | http://localhost:3000 |
+| Auth Service           | 3001 | http://localhost:3001 |
+| Event Service          | 3002 | http://localhost:3002 |
+| Attendance Service     | 3003 | http://localhost:3003 |
 | Venue Consumer Service | 3004 | http://localhost:3004 |
 
 ---
@@ -135,6 +135,7 @@ curl http://localhost:3000/health
 ```
 
 Expected response:
+
 ```json
 {
   "service": "api-gateway",
@@ -162,6 +163,7 @@ curl -X POST http://localhost:3000/api/auth/login \
 Open GraphQL Playground at: http://localhost:3000/graphql
 
 Try this query:
+
 ```graphql
 query {
   venues {
@@ -289,6 +291,7 @@ curl -H "X-LOGE-API-Key: your-shared-secret-key" \
 ```
 
 **Public API Endpoints:**
+
 - `GET /api/public/events` - List all events
 - `GET /api/public/events/:id` - Get event details
 - `GET /api/public/venue-bookings` - Get events with venue bookings

@@ -1,8 +1,8 @@
 /**
  * GraphQL Schema Definition
- * 
+ *
  * Purpose: Unified API layer for TitikTemu
- * 
+ *
  * This GraphQL layer provides:
  *   - Events data access
  *   - Venue data integration (from LOGe)
@@ -11,13 +11,13 @@
  *   - Attendance tracking
  */
 
-const gql = require('graphql-tag');
+const gql = require("graphql-tag");
 
 const typeDefs = gql`
   # ==============================================
   # User Types
   # ==============================================
-  
+
   """
   User account information
   """
@@ -48,7 +48,7 @@ const typeDefs = gql`
   # ==============================================
   # Event Types
   # ==============================================
-  
+
   """
   Event information
   """
@@ -116,7 +116,7 @@ const typeDefs = gql`
   # ==============================================
   # Venue Types (from LOGe integration)
   # ==============================================
-  
+
   """
   Venue information from external LOGe system
   """
@@ -164,7 +164,7 @@ const typeDefs = gql`
   # ==============================================
   # Attendance Types
   # ==============================================
-  
+
   """
   Attendance record
   """
@@ -210,7 +210,7 @@ const typeDefs = gql`
   # ==============================================
   # Input Types
   # ==============================================
-  
+
   """
   Input for user registration
   """
@@ -270,73 +270,109 @@ const typeDefs = gql`
   # ==============================================
   # Query Type
   # ==============================================
-  
+
   type Query {
     # User queries
-    """Get current user's profile (requires authentication)"""
+    """
+    Get current user's profile (requires authentication)
+    """
     me: User
 
     # Event queries
-    """Get all events with optional filters"""
+    """
+    Get all events with optional filters
+    """
     events(status: EventStatus, upcoming: Boolean, page: Int, limit: Int): EventsResponse!
-    
-    """Get a single event by ID"""
+
+    """
+    Get a single event by ID
+    """
     event(id: ID!): Event
-    
-    """Get participants for an event (admin only)"""
+
+    """
+    Get participants for an event (admin only)
+    """
     eventParticipants(eventId: ID!): [EventParticipant!]!
 
     # Venue queries (from LOGe)
-    """Get all available venues from LOGe"""
+    """
+    Get all available venues from LOGe
+    """
     venues: [Venue!]!
-    
-    """Get a single venue by ID from LOGe"""
+
+    """
+    Get a single venue by ID from LOGe
+    """
     venue(id: ID!): Venue
-    
-    """Check venue availability for a date"""
+
+    """
+    Check venue availability for a date
+    """
     venueAvailability(venueId: ID!, date: String!): VenueAvailability
-    
-    """Get all logistics options from LOGe"""
+
+    """
+    Get all logistics options from LOGe
+    """
     logistics: [Logistics!]!
-    
-    """Get logistics by category"""
+
+    """
+    Get logistics by category
+    """
     logisticsByCategory(category: String!): [Logistics!]!
 
     # Attendance queries
-    """Get attendance records for an event (admin only)"""
+    """
+    Get attendance records for an event (admin only)
+    """
     eventAttendance(eventId: ID!): [AttendanceRecord!]!
-    
-    """Get attendance statistics for an event (admin only)"""
+
+    """
+    Get attendance statistics for an event (admin only)
+    """
     attendanceStats(eventId: ID!): AttendanceStats
   }
 
   # ==============================================
   # Mutation Type
   # ==============================================
-  
+
   type Mutation {
     # Auth mutations
-    """Register a new user"""
+    """
+    Register a new user
+    """
     register(input: RegisterInput!): AuthPayload!
-    
-    """Login with email and password"""
+
+    """
+    Login with email and password
+    """
     login(input: LoginInput!): AuthPayload!
 
     # Event mutations
-    """Create a new event (admin only)"""
+    """
+    Create a new event (admin only)
+    """
     createEvent(input: CreateEventInput!): Event!
-    
-    """Update an existing event (admin only)"""
+
+    """
+    Update an existing event (admin only)
+    """
     updateEvent(id: ID!, input: UpdateEventInput!): Event!
-    
-    """Delete an event (admin only)"""
+
+    """
+    Delete an event (admin only)
+    """
     deleteEvent(id: ID!): Boolean!
-    
-    """Register current user for an event"""
+
+    """
+    Register current user for an event
+    """
     registerForEvent(eventId: ID!): EventParticipant!
 
     # Attendance mutations
-    """Check in to an event"""
+    """
+    Check in to an event
+    """
     checkIn(eventId: ID!, notes: String): AttendanceRecord!
   }
 `;

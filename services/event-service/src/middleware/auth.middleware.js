@@ -10,15 +10,15 @@
  */
 const extractUser = (req, res, next) => {
   // API Gateway passes user info in headers after validation
-  const userId = req.headers['x-user-id'];
-  const userEmail = req.headers['x-user-email'];
-  const userRole = req.headers['x-user-role'];
-  const userName = req.headers['x-user-name'];
+  const userId = req.headers["x-user-id"];
+  const userEmail = req.headers["x-user-email"];
+  const userRole = req.headers["x-user-role"];
+  const userName = req.headers["x-user-name"];
 
   if (!userId) {
     return res.status(401).json({
       success: false,
-      message: 'Authentication required'
+      message: "Authentication required",
     });
   }
 
@@ -26,7 +26,7 @@ const extractUser = (req, res, next) => {
     id: userId,
     email: userEmail,
     role: userRole,
-    name: userName
+    name: userName,
   };
 
   next();
@@ -36,10 +36,10 @@ const extractUser = (req, res, next) => {
  * Require admin role
  */
 const requireAdmin = (req, res, next) => {
-  if (!req.user || req.user.role !== 'ADMIN') {
+  if (!req.user || req.user.role !== "ADMIN") {
     return res.status(403).json({
       success: false,
-      message: 'Admin access required'
+      message: "Admin access required",
     });
   }
 
@@ -53,7 +53,7 @@ const requireUser = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({
       success: false,
-      message: 'Authentication required'
+      message: "Authentication required",
     });
   }
 
@@ -65,17 +65,17 @@ const requireUser = (req, res, next) => {
  * Used for external LOGe system to access event data
  */
 const verifyLogeApiKey = (req, res, next) => {
-  const config = require('../config');
-  const apiKey = req.headers['x-loge-api-key'];
-  
+  const config = require("../config");
+  const apiKey = req.headers["x-loge-api-key"];
+
   // Check if LOGe API key is configured and matches
   if (config.loge.incomingApiKey && apiKey !== config.loge.incomingApiKey) {
     return res.status(401).json({
       success: false,
-      message: 'Invalid API key'
+      message: "Invalid API key",
     });
   }
-  
+
   next();
 };
 
@@ -83,5 +83,5 @@ module.exports = {
   extractUser,
   requireAdmin,
   requireUser,
-  verifyLogeApiKey
+  verifyLogeApiKey,
 };
