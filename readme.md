@@ -247,9 +247,3 @@ TitikTemu dirancang sebagai sistem backend modular yang:
 * Memenuhi seluruh kebutuhan tugas besar
 
 ---
-
-## 👨‍💻 Author
-
-**Stevy Reuben Januardi**
-
-S1 Sistem Informasi – Telkom University
