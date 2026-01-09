@@ -9,6 +9,7 @@
     "shared"
   ],
   "scripts": {
+    "start": "npm start --workspace=gateway",
     "dev:gateway": "npm run dev --workspace=gateway",
     "dev:auth": "npm run dev --workspace=auth-service",
     "dev:event": "npm run dev --workspace=event-service",
