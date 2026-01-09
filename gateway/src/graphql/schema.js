@@ -124,17 +124,29 @@ const typeDefs = gql`
     id: ID!
     name: String!
     description: String
-    capacity: Int
-    location: String
-    facilities: [String!]
-    available: Boolean!
+    address: String!
+    imageUrl: String
+    rooms: [Room!]
   }
 
   """
-  Venue availability for a specific date
+  Room in a venue
   """
-  type VenueAvailability {
+  type Room {
+    id: ID!
     venueId: ID!
+    name: String!
+    capacity: Int!
+    facilities: [String!]
+    venue: Venue
+  }
+
+  """
+  Room availability for a specific date
+  """
+  type RoomAvailability {
+    roomId: ID!
+    roomName: String!
     date: String!
     available: Boolean!
     timeSlots: [TimeSlot!]
@@ -306,9 +318,14 @@ const typeDefs = gql`
     venue(id: ID!): Venue
 
     """
-    Check venue availability for a date
+    Get rooms for a specific venue
     """
-    venueAvailability(venueId: ID!, date: String!): VenueAvailability
+    rooms(venueId: ID!): [Room!]!
+
+    """
+    Check room availability for a date
+    """
+    roomAvailability(roomId: ID!, date: String!): RoomAvailability
 
     """
     Get all logistics options from LOGe

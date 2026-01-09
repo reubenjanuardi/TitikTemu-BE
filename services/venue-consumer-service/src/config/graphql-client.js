@@ -52,6 +52,10 @@ const GET_VENUES = gql`
         name
         capacity
         facilities
+        venue {
+          id
+          name
+        }
       }
     }
   }
@@ -73,6 +77,10 @@ const GET_VENUE_BY_ID = gql`
         name
         capacity
         facilities
+        venue {
+          id
+          name
+        }
       }
     }
   }
@@ -151,6 +159,11 @@ const GET_RESERVATIONS_BY_ROOM = gql`
         id
         name
         capacity
+        facilities
+        venue {
+          id
+          name
+        }
       }
     }
   }
@@ -216,6 +229,12 @@ const UPDATE_RESERVATION = gql`
       room {
         id
         name
+        capacity
+        facilities
+        venue {
+          id
+          name
+        }
       }
     }
   }
