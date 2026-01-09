@@ -85,7 +85,7 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3004
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-min-32-chars}
-      LOGE_GRAPHQL_URL: ${LOGE_GRAPHQL_URL:-http://localhost:4000/graphql}
+      LOGE_GRAPHQL_URL: https://c1e44d9445a2.ngrok-free.app/graphql
       TZ: "UTC"
     ports:
       - "3004:3004"
